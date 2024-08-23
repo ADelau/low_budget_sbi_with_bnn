@@ -1,1 +1,1 @@
-# low_budget_sbi_with_bnn
+# Low-Budget Simulation-Based Inference with Bayesian Neural Networks
