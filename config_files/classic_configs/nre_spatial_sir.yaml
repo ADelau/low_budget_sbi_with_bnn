@@ -1,0 +1,25 @@
+benchmark: spatialsir
+method: nre
+simulation_budgets: [10, 16, 64, 256, 1024, 4096, 16384, 65536, 262144, 1048576]
+val_fraction: 0.1
+train_set_size: 131072
+val_set_size: 13110
+test_set_size: 2000
+coverage_set_size: 2000
+block_size: 1000
+seed: 1
+nb_runs: 3
+train_batch_size: [1, 1, 2, 8, 16, 32, 64, 128, 512, 1024]
+weight_decay: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+test_batch_size: 256
+coverage_batch_size: 1024
+epochs: 500
+learning_rate: 1e-3
+min_lr: 1e-5
+nb_parallel_coverages: 1
+experience_dir: "results/nre/spatialsir"
+data_path: "data"
+diagnostics: ["coverage", "nominal_log_prob", "uncertainty"]
+schedule: True
+ensemble: False
+

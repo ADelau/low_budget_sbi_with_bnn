@@ -1,0 +1,24 @@
+benchmark: lotka_volterra
+method: npe
+simulation_budgets: [10]
+val_fraction: 0.1
+train_set_size: 1000
+val_set_size: 1000
+test_set_size: 10
+coverage_set_size: 2
+block_size: 1000
+seed: 1
+nb_runs: 1
+train_batch_size: [1]
+weight_decay: [0.]
+test_batch_size: 256
+epochs: 5
+learning_rate: 1e-3
+min_lr: 1e-5
+nb_parallel_coverages: 1
+experience_dir: "results/npe_test/lotka_volterra"
+data_path: "data"
+diagnostics: ["coverage", "nominal_log_prob", "uncertainty"]
+schedule: True
+ensemble: False
+

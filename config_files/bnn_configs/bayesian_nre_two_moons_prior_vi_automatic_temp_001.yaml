@@ -1,0 +1,69 @@
+benchmark: two_moons
+block_size: 1000
+bnn_method: vi
+coverage_set_size: 2000
+diagnostics: ["coverage", "nominal_log_prob", "uncertainty"]
+epochs: 500
+experience_dir: results/bayesian_nre_prior_vi_automatic_temp_001/two_moons
+data_path: data
+learning_rate: 0.0001
+min_lr: 0.00001
+patience: 10
+min_prior_std: 0.001
+method: bayesian_nre
+nb_networks: 100
+nb_parallel_coverages: 20
+nb_prior_estimators: 100
+nb_runs: 3
+net0: null
+patience: 10
+simulation_budgets: [10, 16, 64, 256, 1024, 4096, 16384, 65536, 262144, 1048576]
+temperature: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+max_temperature: [0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+test_batch_size: 256
+coverage_batch_size: 1024
+test_set_size: 1024
+train_batch_size: [1, 1, 2, 8, 16, 32, 64, 128, 128, 128]
+weight_decay: [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+std_init_value: 0.001
+train_set_size: 1000000
+val_fraction: 0.1
+val_set_size: 110000
+seed: 0
+optimize_prior: True
+prior_variational_family: gaussian_softplus
+beta: 1000
+measurement_set_size: 256
+init_function_samples: 100
+init_lr: 0.000001
+init_iter: 50000
+concentration: 5
+distance_type: stein_KL
+use_wandb: False
+wandb_project: bnn_init
+wandb_user: adelau
+generator_clip_gradient: quantile
+generator_clipping_quantile: 0.8
+loss_divider: 1
+set_eta: True
+eta: 0.001
+set_num_eigs: False
+joint_entropy: True
+automatic_kernel: True
+automatic_kernel_quantile: 0.1
+automatic_kernel_nb_samples: 1000
+automatic_observable_bounds: True
+x_coef: 0.5
+theta_coef: 0.5
+gp_theta_variance: 0.01
+gp_x_variance: 0.01
+kernel_type: multiplicative
+init_nb_val_steps: 20
+init_val_step_every: 100
+schedule_init_lr: False
+init_optimizer: adam
+measurement_generator_type: uniform
+init_low_variance_init: True
+init_std_init_value: 0.0001
+extend_parameter_domain: 1.
+gp_log_space: False

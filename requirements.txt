@@ -1,0 +1,12 @@
+autoclip==0.2.1
+dawgz==0.5.0
+lampe==0.8.2
+matplotlib==3.7.1
+numpy==1.26.4
+pandas==2.2.2
+PyYAML==5.3.1
+scipy==1.11.2
+torch==2.2.1
+tqdm==4.64.1
+wandb==0.16.1
+zuko==1.1.0
