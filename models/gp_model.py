@@ -1,14 +1,13 @@
 import torch
 from torch import Tensor
 
-from ..benchmarks import Benchmark
 from .base import Model, ModelFactory
 from .np_priors import GPPrior
 
 
 class GPFactory(ModelFactory):
     def __init__(
-        self, config: dict, benchmark: Benchmark, simulation_budget: int
+        self, config: dict, benchmark, simulation_budget: int
     ) -> None:
         """Constructor.
 
@@ -27,7 +26,7 @@ class GPFactory(ModelFactory):
 class GPModel(Model):
     def __init__(
         self,
-        benchmark: Benchmark,
+        benchmark,
         model_path: str,
         config: dict,
         normalization_constants: dict,

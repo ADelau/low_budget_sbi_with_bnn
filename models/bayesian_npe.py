@@ -10,7 +10,6 @@ from lampe.data import H5Dataset
 from lampe.inference import NPE, NPELoss
 from torch import Tensor
 
-from ..benchmarks import Benchmark
 from .base import Model, ModelFactory
 from .bayesian_methods.hmc import HMCmodel
 from .bayesian_methods.vi import VImodel
@@ -33,7 +32,7 @@ class BayesianNPEFactory(ModelFactory):
     def __init__(
         self,
         config: dict,
-        benchmark: Benchmark,
+        benchmark,
         simulation_budget: int,
         model_class: Any = None,
     ) -> None:
@@ -338,7 +337,7 @@ class BayesianNPEModel(Model):
 
     def __init__(
         self,
-        benchmark: Benchmark,
+        benchmark,
         model_path: str,
         config: dict,
         normalization_constants: dict,
@@ -1025,7 +1024,7 @@ class BayesianNPEModel(Model):
             measurement_generator=measurement_generator,
         )
 
-    def wrap_bnn_prior(self, bnn_prior: nn.module) -> nn.Module:
+    def wrap_bnn_prior(self, bnn_prior: nn.Module) -> nn.Module:
         """Wrap the bnn prior.
 
         Parameters

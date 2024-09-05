@@ -2,14 +2,13 @@ from typing import Callable
 
 from lampe.inference import BNRELoss
 
-from ..benchmarks import Benchmark
 from .base import ModelFactory
 from .nre import NREModel
 
 
 class BNREFactory(ModelFactory):
     def __init__(
-        self, config: dict, benchmark: Benchmark, simulation_budget: int
+        self, config: dict, benchmark, simulation_budget: int
     ) -> None:
         """Constructor.
 
@@ -35,7 +34,7 @@ class BNREFactory(ModelFactory):
 class BNREModel(NREModel):
     def __init__(
         self,
-        benchmark: Benchmark,
+        benchmark,
         model_path: str,
         config: dict,
         normalization_constants: dict,

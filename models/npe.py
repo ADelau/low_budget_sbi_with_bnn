@@ -6,13 +6,12 @@ import torch.nn as nn
 from lampe.inference import NPE, NPELoss
 from torch import Tensor
 
-from ..benchmarks import Benchmark
 from .base import Model, ModelFactory
 
 
 class NPEFactory(ModelFactory):
     def __init__(
-        self, config: dict, benchmark: Benchmark, simulation_budget: int
+        self, config: dict, benchmark, simulation_budget: int
     ) -> None:
         """Constructor.
 
@@ -134,7 +133,7 @@ class NPEWithEmbedding(nn.Module):
 class NPEModel(Model):
     def __init__(
         self,
-        benchmark: Benchmark,
+        benchmark,
         model_path: str,
         config: dict,
         normalization_constants: dict,

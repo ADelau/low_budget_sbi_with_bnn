@@ -11,8 +11,6 @@ from lampe.utils import GDStep
 from torch import Tensor
 from tqdm import tqdm
 
-from ..benchmarks import Benchmark
-
 
 class ModelFactory(ABC):
     """Abstract class for a model factory"""
@@ -20,7 +18,7 @@ class ModelFactory(ABC):
     def __init__(
         self,
         config: dict,
-        benchmark: Benchmark,
+        benchmark,
         simulation_budget: int,
         model_class: Any,
     ) -> None:

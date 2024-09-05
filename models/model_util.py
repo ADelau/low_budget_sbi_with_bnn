@@ -1,4 +1,3 @@
-from ..benchmarks import Benchmark
 from .base import ModelFactory
 from .bayesian_npe import BayesianNPEFactory
 from .bayesian_nre import BayesianNREFactory
@@ -10,7 +9,7 @@ from .nre import NREFactory
 
 
 def load_model_factory(
-    config: dict, benchmark: Benchmark, simulation_budget: int
+    config: dict, benchmark, simulation_budget: int
 ) -> ModelFactory:
     """Load a model factory based on config.
 

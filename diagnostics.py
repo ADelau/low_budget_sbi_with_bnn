@@ -8,8 +8,8 @@ from lampe.utils import gridapply
 from tqdm import tqdm
 from typing import Callable, Tuple, Optional, List
 from lampe.data import H5Dataset
-from .models import Model
-from .benchmarks import Benchmark
+from models import Model
+from benchmarks import Benchmark
 
 
 def intrinsic_expected_coverage_mc(

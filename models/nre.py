@@ -6,13 +6,12 @@ import torch.nn as nn
 from lampe.inference import NRE, NRELoss
 from torch import Tensor
 
-from ..benchmarks import Benchmark
 from .base import Model, ModelFactory
 
 
 class NREFactory(ModelFactory):
     def __init__(
-        self, config: dict, benchmark: Benchmark, simulation_budget: int
+        self, config: dict, benchmark, simulation_budget: int
     ) -> None:
         """Constructor.
 
@@ -93,7 +92,7 @@ class ClassifierWithEmbedding(nn.Module):
 class NREModel(Model):
     def __init__(
         self,
-        benchmark: Benchmark,
+        benchmark,
         model_path: str,
         config: dict,
         normalization_constants: dict,

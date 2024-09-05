@@ -8,7 +8,6 @@ import torch.nn as nn
 from lampe.inference import NRE, NRELoss
 from torch import Tensor
 
-from ..benchmarks import Benchmark
 from .bayesian_methods.hmc import HMCmodel
 from .bayesian_methods.vi import VImodel
 from .bayesian_npe import BayesianNPEFactory, BayesianNPEModel
@@ -21,7 +20,7 @@ class BayesianNREFactory(BayesianNPEFactory):
     def __init__(
         self,
         config: dict,
-        benchmark: Benchmark,
+        benchmark,
         simulation_budget: int,
         model_class: Any = None,
     ) -> None:
@@ -50,7 +49,7 @@ class BayesianNREModel(BayesianNPEModel):
 
     def __init__(
         self,
-        benchmark: Benchmark,
+        benchmark,
         model_path: str,
         config: dict,
         normalization_constants: dict,
@@ -276,7 +275,7 @@ class BayesianNREModel(BayesianNPEModel):
         )
         shutil.rmtree(os.path.join(self.model_path, "bnn_prior.pt"), ignore_errors=True)
 
-    def wrap_bnn_prior(self, bnn_prior: nn.module) -> nn.Module:
+    def wrap_bnn_prior(self, bnn_prior: nn.Module) -> nn.Module:
         """Wrap the bnn prior.
 
         Parameters
