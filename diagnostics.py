@@ -2,12 +2,40 @@ from itertools import islice
 
 import numpy as np
 import torch
+from torch import Tensor
 from lampe.diagnostics import expected_coverage_mc, expected_coverage_ni
 from lampe.utils import gridapply
 from tqdm import tqdm
+from typing import Callable, Tuple, Optional, List
+from lampe.data import H5Dataset
+from .models import Model
+from .benchmarks import Benchmark
 
 
-def intrinsic_expected_coverage_mc(posterior, pairs, prior, n):
+def intrinsic_expected_coverage_mc(
+    posterior: Callable,
+    pairs: H5Dataset,
+    prior: torch.distributions.Distribution,
+    n: int,
+) -> Tuple[Tensor, Tensor]:
+    """Compute intrisic coverage with Monte Carlo.
+
+    Parameters
+    ----------
+    posterior : Callable
+        A function taking a observation as input and outputing a Posterior
+    pairs : H5Dataset
+        Parameters, observations pairs on which to compute the coverage.
+    prior : torch.distributions.Distribution
+        The prior
+    n : int
+        The number of samples to use for Monte-Carlo approximation.
+
+    Returns
+    -------
+    Tuple[Tensor, Tensor]
+        Credibility level and coverage values.
+    """
 
     ranks = []
 
@@ -32,7 +60,31 @@ def intrinsic_expected_coverage_mc(posterior, pairs, prior, n):
     )
 
 
-def intrinsic_expected_coverage_ni(posterior, pairs, prior, domain, **kwargs):
+def intrinsic_expected_coverage_ni(
+    posterior: Callable,
+    pairs: H5Dataset,
+    prior: torch.distributions.Distribution,
+    domain: Tuple[Tensor, Tensor],
+    **kwargs
+) -> Tuple[Tensor, Tensor]:
+    """Compute intrisic coverage with unmerical integration.
+
+    Parameters
+    ----------
+    posterior : Callable
+        A function that takes parameter and ovservation as input and output the log posterior.
+    pairs : H5Dataset
+        Parameters, observations pairs on which to compute the coverage.
+    prior : torch.distributions.Distribution
+        The prior.
+    domain : Tuple[Tensor, Tensor]
+        Lower and upper bound of the domain on which to perform numerical integration.
+
+    Returns
+    -------
+    Tuple[Tensor, Tensor]
+        Credibility level and coverage values.
+    """
     ranks = []
 
     with torch.no_grad():
@@ -61,21 +113,36 @@ def intrinsic_expected_coverage_ni(posterior, pairs, prior, domain, **kwargs):
 
 
 def compute_coverage(
-    model, benchmark, config, bounds=None, intrinsic=False, prior=False
-):
+    model: Model,
+    benchmark: Benchmark,
+    config: dict,
+    bounds: Optional[Tuple[int, int]] = None,
+    intrinsic: bool = False,
+    prior: bool = False,
+) -> Tuple[Tensor, Tensor]:
     """Compute the empirical expected coverage of a model.
 
-    Args:
-        model (Model): a model such as defined in models/base.py
-        benchmark (Benchmark): a benchmark such as defined in benchmarks/base.py
-        config (dict): a dictionary containing the configuration
-        bounds (int, int): bounds on dataset indices on which to evaluate the coverage
+    Parameters
+    ----------
+    model : Model
+        The model.
+    benchmark : Benchmark
+        The benchmark.
+    config : dict
+        The config.
+    bounds : Optional[Tuple[int, int]], optional
+        Bounds on dataset indices on which to evaluate the coverage.
+    intrinsic : bool, optional
+        Whether to compute intrinsic coverage, by default False
+    prior : bool, optional
+        Whether to estimate the coverage of the prior instead of posterior model,
+        by default False
 
-    Returns:
-        (Tensor, Tensor): a tuple (levels, coverages) containing the coverages
-        associated to different levels.
+    Returns
+    -------
+    Tuple[Tensor, Tensor]
+        Credibility level and coverage values.
     """
-
     if prior:
         if model.sampling_enabled():
             model_distrib = model.get_prior_fct(config["nb_prior_estimators"])
@@ -128,7 +195,23 @@ def compute_coverage(
             )
 
 
-def compute_merged_coverages(levels, coverages):
+def compute_merged_coverages(
+    levels: List[Tensor], coverages: List[Tensor]
+) -> Tuple[Tensor, Tensor]:
+    """Merge levels and coverage computed separately
+
+    Parameters
+    ----------
+    levels : List[Tensor]
+        The list of levels to merge.
+    coverages : List[Tensor]
+        The list of coverages to merge.
+
+    Returns
+    -------
+    Tuple[Tensor, Tensor]
+        The merged levels and coverages.
+    """
     levels = torch.cat(
         [level if i == 0 else level[1:-1] for i, level in enumerate(levels)]
     )
@@ -137,22 +220,31 @@ def compute_merged_coverages(levels, coverages):
     return levels, coverages
 
 
-def compute_normalized_entropy_log_posterior(model, benchmark, config, bounds=None):
-    """Compute the average entropy and normalized log posterior associated to nominal
-    parameter value of a model.
+def compute_normalized_entropy_log_posterior(
+    model: Model,
+    benchmark: Benchmark,
+    config: dict,
+    bounds: Optional[Tuple[int, int]] = None,
+) -> Tuple[float, float]:
+    """Compute the average entropy and normalized log posterior.
 
-    Args:
-        model (Model): a model such as defined in models/base.py
-        benchmark (Benchmark): a benchmark such as defined in benchmarks/base.py
-        config (dict): a dictionary containing the configuration
-        bounds (int, int): bounds on dataset indices on which to evaluate the entropy
-        and normalized log posterior
+    Parameters
+    ----------
+    model : Model
+        The model;
+    benchmark : Benchmark
+        The benchmark.
+    config : dict
+        The config.
+    bounds : Optional[Tuple[int, int]], optional
+        Bounds on dataset indices on which to evaluate the entropy and normalized
+        log posterior, by default None
 
-    Returns:
-        (float, float): a tuple (entropies, nominal_log_probs) containing the average
-        entropy and normalized nominal log posterior density
+    Returns
+    -------
+    Tuple[float, float]
+        The average entropy and normalized nominal log posterior density.
     """
-
     dataset = benchmark.get_coverage_set(config["coverage_set_size"])
     if bounds is not None:
         dataset = islice(dataset, bounds[0], bounds[1])
@@ -197,23 +289,39 @@ def compute_normalized_entropy_log_posterior(model, benchmark, config, bounds=No
     return np.mean(entropies), np.mean(nominal_log_probs)
 
 
-def merge_scalar_results(results):
+def merge_scalar_results(results: List[float]) -> float:
+    """Merge scalar results.
+
+    Parameters
+    ----------
+    results : List[float]
+        List of results to merge.
+
+    Returns
+    -------
+    float
+        The merged results.
+    """
     return np.mean(np.array(results))
 
 
-def compute_log_posterior(model, benchmark, config):
-    """Compute the average log posterior associated to nominal parameter value of a
-    model.
+def compute_log_posterior(model: Model, benchmark: Benchmark, config: dict) -> float:
+    """Compute the average log posterior.
 
-    Args:
-        model (Model): a model such as defined in models/base.py
-        benchmark (Benchmark): a benchmark such as defined in benchmarks/base.py
-        config (dict): a dictionary containing the configuration
+    Parameters
+    ----------
+    model : Model
+        The model.
+    benchmark : Benchmark
+        The benchmark.
+    config : dict
+        The config.
 
-    Returns:
-        float: the average nominal log posterior density
+    Returns
+    -------
+    float
+        The average nominal log posterior density.
     """
-
     nominal_log_probs = []
     dataset = benchmark.get_test_set(config["test_set_size"], config["test_batch_size"])
 
@@ -225,18 +333,23 @@ def compute_log_posterior(model, benchmark, config):
     return torch.mean(torch.cat(nominal_log_probs)).item()
 
 
-def compute_balancing_error(model, benchmark, config):
+def compute_balancing_error(model: Model, benchmark: Benchmark, config: dict) -> float:
     """Compute the average balancing error of a model.
 
-    Args:
-        model (Model): a model such as defined in models/base.py
-        benchmark (Benchmark): a benchmark such as defined in benchmarks/base.py
-        config (dict): a dictionary containing the configuration
+    Parameters
+    ----------
+    model : Model
+        The model.
+    benchmark : Benchmark
+        The benchmark.
+    config : dict
+        The config.
 
-    Returns:
-        float: the average balancing error
+    Returns
+    -------
+    float
+        The average balancing error.
     """
-
     dataset = benchmark.get_test_set(config["test_set_size"], config["test_batch_size"])
     d_joints = []
     d_marginals = []
@@ -262,18 +375,25 @@ def compute_balancing_error(model, benchmark, config):
     return np.absolute(1 - balancing)
 
 
-def compute_prior_mixture_coef(model, benchmark, config):
+def compute_prior_mixture_coef(
+    model: Model, benchmark: Benchmark, config: dict
+) -> float:
     """Compute the mixture coef of prior augmented models.
 
-    Args:
-        model (Model): a model such as defined in models/base.py
-        benchmark (Benchmark): a benchmark such as defined in benchmarks/base.py
-        config (dict): a dictionary containing the configuration
+    Parameters
+    ----------
+    model : Model
+        The model.
+    benchmark : Benchmark
+        The benchmark.
+    config : dict
+        The config.
 
-    Returns:
-        float: the mixture coef
+    Returns
+    -------
+    float
+        the mixture coef.
     """
-
     prior_mixture_coefs = []
     dataset = benchmark.get_test_set(config["test_set_size"], config["test_batch_size"])
 
@@ -287,7 +407,23 @@ def compute_prior_mixture_coef(model, benchmark, config):
     return torch.cat(prior_mixture_coefs)
 
 
-def compute_aleatoric_mc(model, x, n):
+def compute_aleatoric_mc(model: Model, x: Tensor, n: int) -> Tensor:
+    """Compute aleatoric uncertainty with Monte Carlo.
+
+    Parameters
+    ----------
+    model : Model
+        The model.
+    x : Tensor
+        The observation.
+    n : int
+        The number of Monte-Carlo samples to approximate the uncertainty.
+
+    Returns
+    -------
+    Tensor
+        The aleatoric uncertainty.
+    """
 
     nb_networks = model.get_nb_networks()
     entropies = []
@@ -304,8 +440,41 @@ def compute_aleatoric_mc(model, x, n):
     return torch.mean(torch.stack(entropies))
 
 
-def compute_uncertainty_mc(model, pairs, n):
-    def uncertainty(theta, x):
+def compute_uncertainty_mc(
+    model: Model, pairs: H5Dataset, n: int
+) -> Tuple[Tensor, Tensor, Tensor]:
+    """Compute all uncertainties with Monte-Carlo.
+
+    Parameters
+    ----------
+    model : Model
+        The model.
+    pairs : H5Dataset
+        A dataset of parameters, observations pairs.
+    n : int
+       The number of Monte-Carlo samples.
+
+    Returns
+    -------
+    Tuple[Tensor, Tensor, Tensor]
+        The total, aleatoric and epistemic uncertainties.
+    """
+
+    def uncertainty(theta: Tensor, x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+        """Compute uncertainty for a sample.
+
+        Parameters
+        ----------
+        theta : Tensor
+            The simulator's parameters.
+        x : Tensor
+            The observation.
+
+        Returns
+        -------
+        Tuple[Tensor, Tensor, Tensor]
+            The total, aleatoric and epistemic uncertainties.
+        """
         samples = model.sample(x, (n,))
         log_probs = model.log_prob(samples, x)
         # convert to bits for exact shannon entropy
@@ -339,14 +508,19 @@ def compute_uncertainty_mc(model, pairs, n):
     return atu, aau, aeu
 
 
-def compute_entropy(log_probas):
-    """
-    Computes the entropy of a posterior distribution using the posterior probabilities.
+def compute_entropy(log_probas: Tensor) -> Tensor:
+    """Computes the entropy of a posterior distribution using posterior probabilities.
 
-    args:
-        log_probas(Tensor): probabilities of the samples.
-    """
+    Parameters
+    ----------
+    log_probas : Tensor
+        probabilities of the samples.
 
+    Returns
+    -------
+    Tensor
+        The entropy.
+    """
     assert log_probas.dim() == 1, "log_probas must be a 1D tensor."
 
     probas = torch.exp(log_probas)
@@ -355,7 +529,25 @@ def compute_entropy(log_probas):
     return entropy * torch.log(torch.tensor([2.0])).to(entropy.device)
 
 
-def compute_aleatoric_ni(model, x, domain, **kwargs):
+def compute_aleatoric_ni(
+    model: Model, x: Tensor, domain: Tuple[Tensor, Tensor], **kwargs
+) -> Tensor:
+    """Compute aleatoric uncertainty with numerical integration.
+
+    Parameters
+    ----------
+    model : Model
+        The model.
+    x : Tensor
+        The observation.
+    domain : Tuple[Tensor, Tensor]
+        Lower and upper bound of the integration domain.
+
+    Returns
+    -------
+    Tensor
+        The aleatoric uncertainty.
+    """
     nb_networks = model.get_nb_networks()
 
     entropies = []
@@ -372,8 +564,41 @@ def compute_aleatoric_ni(model, x, domain, **kwargs):
     return torch.mean(torch.stack(entropies))
 
 
-def compute_uncertainty_ni(model, pairs, domain, **kwargs):
-    def uncertainty(theta, x):
+def compute_uncertainty_ni(
+    model: Model, pairs: H5Dataset, domain: Tuple[Tensor, Tensor], **kwargs
+) -> Tuple[Tensor, Tensor, Tensor]:
+    """Compute all uncertainties with numerical integration.
+
+    Parameters
+    ----------
+    model : Model
+        The model.
+    pairs : H5Dataset
+        A dataset of parameters, observations pairs.
+    domain : Tuple[Tensor, Tensor]
+        Lower and upper bound of the integration domain.
+
+    Returns
+    -------
+    Tuple[Tensor, Tensor, Tensor]
+        The total, aleatoric and epistemic uncertainties.
+    """
+
+    def uncertainty(theta: Tensor, x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+        """Compute uncertainty for a sample.
+
+        Parameters
+        ----------
+        theta : Tensor
+            The simulator's parameters.
+        x : Tensor
+            The observation.
+
+        Returns
+        -------
+        Tuple[Tensor, Tensor, Tensor]
+            The total, aleatoric and epistemic uncertainties.
+        """
         _, log_probs = gridapply(lambda theta: log_p(theta, x), domain, bins=256)
         volume = ((domain[1] - domain[0]) / log_probs[0].shape[0]).prod()
         total = compute_entropy(log_probs.flatten()) * volume
@@ -391,7 +616,7 @@ def compute_uncertainty_ni(model, pairs, domain, **kwargs):
     aleatorics = []
     epistemics = []
 
-    def log_p(theta, x):
+    def log_p(theta: Tensor, x: Tensor) -> Tensor:
         return model.log_prob(theta, x)
 
     with torch.no_grad():
@@ -409,16 +634,24 @@ def compute_uncertainty_ni(model, pairs, domain, **kwargs):
     return atu, aau, aeu
 
 
-def compute_uncertainty(model, benchmark, config, **kwargs):
-    """Compute the uncertainty of a model. If the model is an ensemble model (bayesian or non-bayesian), it will return the total, aleatoric and epistemic uncertainties. If the model is a non-Bayesian model, it will return the total uncertainty.
+def compute_uncertainty(
+    model: Model, benchmark: Benchmark, config: dict, **kwargs
+) -> Tuple[Tensor, Tensor, Tensor]:
+    """Compute the uncertainty of a model.
 
-    Args:
-        model (Model): a model such as defined in models/base.py
-        benchmark (Benchmark): a benchmark such as defined in benchmarks/base.py
-        config (dict): a dictionary containing the configuration
+    Parameters
+    ----------
+    model : Model
+        The model.
+    benchmark : Benchmark
+        The benchmark.
+    config : dict
+        The config.
 
-    Returns:
-        float: the uncertainty
+    Returns
+    -------
+    Tuple[Tensor, Tensor, Tensor]
+        The total, aleatoric and epistemic uncertainties.
     """
 
     dataset = benchmark.get_coverage_set(config["coverage_set_size"])
