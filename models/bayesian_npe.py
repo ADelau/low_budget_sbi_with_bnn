@@ -15,12 +15,16 @@ from .base import Model, ModelFactory
 from .bayesian_methods.hmc import HMCmodel
 from .bayesian_methods.vi import VImodel
 from .np_priors import GPPrior
-from .prior_mappers import (DatasetMeasurementGenerator,
-                            DistanceBasedPriorMapper,
-                            HybridMeasurementGenerator,
-                            UniformMeasurementGenerator,)
-from .variational_distributions import (GaussianNNParametersDistribution,
-                                        HierarchicalGaussianNNParametersDistribution,)
+from .prior_mappers import (
+    DatasetMeasurementGenerator,
+    DistanceBasedPriorMapper,
+    HybridMeasurementGenerator,
+    UniformMeasurementGenerator,
+)
+from .variational_distributions import (
+    GaussianNNParametersDistribution,
+    HierarchicalGaussianNNParametersDistribution,
+)
 
 
 class BayesianNPEFactory(ModelFactory):

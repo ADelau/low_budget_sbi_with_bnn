@@ -13,8 +13,10 @@ from torch import Tensor
 
 from .np_priors import GPPrior
 from .stein_gradient_estimator import SpectralSteinEstimator
-from .variational_distributions import (GaussianNNParametersDistribution,
-                                        HierarchicalGaussianNNParametersDistribution,)
+from .variational_distributions import (
+    GaussianNNParametersDistribution,
+    HierarchicalGaussianNNParametersDistribution,
+)
 
 
 class DatasetMeasurementGenerator:

@@ -11,14 +11,16 @@ from dawgz import after, ensure, job, schedule
 
 from benchmarks import Datasets, load_benchmark
 from config_files import read_config
-from diagnostics import (compute_balancing_error,
-                         compute_coverage,
-                         compute_log_posterior,
-                         compute_merged_coverages,
-                         compute_normalized_entropy_log_posterior,
-                         compute_prior_mixture_coef,
-                         compute_uncertainty,
-                         merge_scalar_results,)
+from diagnostics import (
+    compute_balancing_error,
+    compute_coverage,
+    compute_log_posterior,
+    compute_merged_coverages,
+    compute_normalized_entropy_log_posterior,
+    compute_prior_mixture_coef,
+    compute_uncertainty,
+    merge_scalar_results,
+)
 from models import load_model_factory
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
